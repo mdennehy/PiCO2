@@ -37,9 +37,10 @@ try:
         # Calculate crc
         crc=crc8(s)
         if crc != z[8]:
-            sys.stderr.write('CRC error calculated %d bytes= %d:%d:%d:%d:%d:%d:%d:%d crc= %dn' % (crc, z[0],z[1],z[2],z[3],z[4],z[5],z[6],z[7],z[8]))
+            sys.stderr.write('CRC error calculated %d bytes= %d:%d:%d:%d:%d:%d:%d:%d crc= %d\n' % (crc, z[0],z[1],z[2],z[3],z[4],z[5],z[6],z[7],z[8]))
         else:
-            sys.stderr.write('Logging data on %s to %sn' % (port, logfilename()))
+            sys.stderr.write('Data: %d:%d:%d:%d:%d:%d:%d:%d\n' % (z[0],z[1],z[2],z[3],z[4],z[5],z[6],z[7]))
+
         # loop will exit with Ctrl-C, which raises a KeyboardInterrupt
         while True:
             #Send "read value" command to MH-Z19 sensor
@@ -50,21 +51,25 @@ try:
             crc=crc8(s)
             #Calculate crc
             if crc != z[8]:
-                sys.stderr.write('CRC error calculated %d bytes= %d:%d:%d:%d:%d:%d:%d:%d crc= %dn' % (crc, z[0],z[1],z[2],z[3],z[4],z[5],z[6],z[7],z[8]))
+                sys.stderr.write('CRC error calculated %d bytes= %d:%d:%d:%d:%d:%d:%d:%d crc= %d\n' % (crc, z[0],z[1],z[2],z[3],z[4],z[5],z[6],z[7],z[8]))
             else:
                 if s[0] == "xff" and s[1] == "x86":
-                    print "co2=", ord(s[2])*256 + ord(s[3])
+                    print "co2=", ord(s[2])*256 + ord(s[3]) 
             co2value=ord(s[2])*256 + ord(s[3])
             now=time.ctime()
             parsed=time.strptime(now)
             lgtime=time.strftime("%Y %m %d %H:%M:%S")
             row=[lgtime,co2value]
             print row
-            #Sample every minute, synced to local time
-            t=datetime.datetime.now()
-            sleeptime=30-t.second
-            time.sleep(sleeptime)
+            #Sample every minute
+            time.sleep(60)
 except Exception as e:
-    sys.stderr.write('Error reading serial port %s: %sn' % (type(e).__name__, e))
+    sys.stderr.write('Error reading serial port %s: %s\n' % (type(e).__name__, e))
+    exc_type, exc_obj, tb = sys.exc_info()
+    f = tb.tb_frame
+    lineno = tb.tb_lineno
+    filename = f.f_code.co_filename
+    print 'EXCEPTION IN ({}, LINE {}): {}'.format(filename, lineno, exc_obj)
+
 except KeyboardInterrupt as e:
-    sys.stderr.write('nCtrl+C pressed, exiting log of %s to %sn' % (port, outfname))
+    sys.stderr.write('Ctrl+C pressed, exiting log of %s to %s\n' % (port, outfname))
